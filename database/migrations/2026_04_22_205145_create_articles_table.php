@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titre');
             $table->text("contenu");
-            $table->enum('status' , ['broullion' , 'publier']);
+            $table->enum('statut' , ['brouillon' , 'publie']);
             $table->timestamp('date_publication')->nullable();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete(); 
