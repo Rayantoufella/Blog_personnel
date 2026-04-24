@@ -9,8 +9,14 @@ use App\Models\Category;
 class ArticleController extends Controller
 {
     public function dashboard(){
-        $article = auth()->user()->articles()->get();
-        return view('articles.dashboard', ['articles' => $article]);
+        $articles = auth()->user()->articles()->with('category')->get();
+        return view('articles.dashboard', [
+            'articles'       => $articles,
+            'totalArticles'  => $articles->count(),
+            'publishedCount' => $articles->where('statut', 'publie')->count(),
+            'draftCount'     => $articles->where('statut', 'brouillon')->count(),
+            'totalViews'     => $articles->sum('views') ?? 0,
+        ]);
     }
 
     public function create(){
@@ -54,6 +60,10 @@ class ArticleController extends Controller
 
         $article->update($validated);
         return redirect()->route('dashboard')->with('success', 'Article modifié !');
+    }
+
+    public function show(Article $article){
+        return view('articles.show', ['article' => $article]);
     }
 
     public function destroy(Article $article){
