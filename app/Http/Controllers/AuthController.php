@@ -15,12 +15,12 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentails = $request->only('email','password');
-        if(Auth::attempt($credentails))
+        $credentials = $request->only('email','password');
+        if(Auth::attempt($credentials))
         {
             return redirect('/dashboard');
         }
-        return back()->with('error','credentials invalides');
+        return back()->with('error','Credentials invalides');
     }
 
     public function logout(){
