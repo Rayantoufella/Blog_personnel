@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initRevealAnimation();
     initNewsletterForm();
     initFilterChips();
+    initParallax();
 });
 
 /**
@@ -67,7 +68,8 @@ function setFilter(button, category) {
     const cards = document.querySelectorAll('[data-cat]');
     cards.forEach(card => {
         if (category === 'all' || card.dataset.cat === category) {
-            card.style.display = 'grid';
+            card.style.display = '';
+            card.style.opacity = '0';
             setTimeout(() => {
                 card.style.opacity = '1';
             }, 10);
@@ -139,5 +141,3 @@ function initParallax() {
     });
 }
 
-// Optional: Initialize parallax
-initParallax();

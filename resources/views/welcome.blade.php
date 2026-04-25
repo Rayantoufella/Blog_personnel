@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Blog personnel — Mon blog de développeur')
+@section('title', 'Blog Personnel — Explorer le code. Partager le voyage.')
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
@@ -19,7 +19,7 @@
     <nav>
         <a href="{{ route('welcome') }}" class="nav-logo">
             <div class="logo-badge">B</div>
-            Blog personnel
+            Blog Personnel
         </a>
         <ul class="nav-links">
             <li><a href="#" class="active">Accueil</a></li>
@@ -177,7 +177,7 @@
             <div class="footer-brand">
                 <a href="{{ route('welcome') }}" class="nav-logo">
                     <div class="logo-badge">B</div>
-                    Blog personnel
+                    Blog Personnel
                 </a>
                 <p>A developer's notebook — covering Laravel, JavaScript, DevOps, and the occasional career reality check.</p>
                 <div class="social-links">
@@ -215,7 +215,7 @@
         </div>
 
         <div class="footer-bottom">
-            <span>&copy; {{ date('Y') }} Blog personnel &mdash; Built with <a href="#">Laravel</a></span>
+            <span>&copy; {{ date('Y') }} Blog Personnel &mdash; Built with <a href="#">Laravel</a></span>
             <span class="mono">v2.0.0</span>
         </div>
     </footer>

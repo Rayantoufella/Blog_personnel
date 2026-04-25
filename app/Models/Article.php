@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Article extends Model
 {
-    protected $fillable = ['titre', 'contenu', 'statut', 'date_publication', 'user_id', 'category_id'];
+    protected $fillable = ['titre', 'contenu', 'statut', 'date_publication', 'user_id', 'category_id', 'views'];
 
     protected $casts = [
         'date_publication' => 'datetime',

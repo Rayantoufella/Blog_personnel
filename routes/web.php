@@ -3,14 +3,26 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
+use App\Models\Article;
 
 Route::get('/', function () {
-    return view('welcome');
+    $articles = Article::where('statut', 'publie')
+        ->with(['category', 'user'])
+        ->latest()
+        ->get();
+
+    $totalArticles  = $articles->count();
+    $featuredArticle = $articles->first();
+    $categoryStats  = $articles->groupBy(fn($a) => $a->category->nom ?? 'Autres')
+        ->map->count()
+        ->toArray();
+
+    return view('welcome', compact('articles', 'totalArticles', 'featuredArticle', 'categoryStats'));
 })->name('welcome');
 
 Route::get('/login', [AuthController::class , 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class , 'Login'])->name('auth.login');
-Route::post('/logout', [AuthController::class , 'Logout'])->name('auth.logout');
+Route::post('/login', [AuthController::class , 'login'])->name('auth.login');
+Route::post('/logout', [AuthController::class , 'logout'])->name('auth.logout');
 
 Route::middleware('auth')->group(function (){
     Route::get('/dashboard' , [ArticleController::class, 'dashboard'])->name('dashboard');

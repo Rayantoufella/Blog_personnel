@@ -1,149 +1,117 @@
-/* ========================================
-   DASHBOARD PAGE JS
-   ======================================== */
-
-document.addEventListener('DOMContentLoaded', function() {
-    initCursorGlow();
-    initRevealAnimation();
-    initTableFilters();
-    initDeleteModal();
-    initSearch();
+// ── Cursor glow ──
+const cg = document.getElementById('cg');
+document.addEventListener('mousemove', function(e) {
+  cg.style.left = e.clientX + 'px';
+  cg.style.top  = e.clientY + 'px';
 });
 
-/**
- * Cursor glow effect
- */
-function initCursorGlow() {
-    const cursorGlow = document.getElementById('cg');
-    if (!cursorGlow) return;
-    
-    document.addEventListener('mousemove', function(e) {
-        cursorGlow.style.left = (e.clientX - 15) + 'px';
-        cursorGlow.style.top = (e.clientY - 15) + 'px';
-        cursorGlow.style.display = 'block';
-    });
-    
-    document.addEventListener('mouseleave', function() {
-        cursorGlow.style.display = 'none';
-    });
+// ── Orb parallax ──
+const o1 = document.querySelector('.orb-1'), o2 = document.querySelector('.orb-2');
+document.addEventListener('mousemove', function(e) {
+  const x = (e.clientX / window.innerWidth  - 0.5) * 32;
+  const y = (e.clientY / window.innerHeight - 0.5) * 32;
+  o1.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+  o2.style.transform = 'translate(' + (-x * 0.7) + 'px, ' + (-y * 0.7) + 'px)';
+});
+
+// ── Scroll reveal (staggered) ──
+const obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e, i) {
+    if (e.isIntersecting) setTimeout(function() { e.target.classList.add('visible'); }, i * 55);
+  });
+}, { threshold: 0.05 });
+document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+
+// ── Filter by status ──
+var currentStatus = 'all';
+var currentSearch = '';
+
+function setStatusFilter(chip, status) {
+  document.querySelectorAll('.filter-pill').forEach(function(c) { c.classList.remove('active'); });
+  chip.classList.add('active');
+  currentStatus = status;
+  applyFilters();
 }
 
-/**
- * Reveal animation on scroll
- */
-function initRevealAnimation() {
-    const reveals = document.querySelectorAll('.reveal');
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, index * 50);
-                observer.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: 0.1
-    });
-    
-    reveals.forEach(reveal => {
-        observer.observe(reveal);
-    });
+function filterRows(q) {
+  currentSearch = q.toLowerCase();
+  applyFilters();
 }
 
-/**
- * Filter table rows by status
- */
-function setStatusFilter(pill, status) {
-    // Update active pill
-    document.querySelectorAll('.filter-pill').forEach(p => {
-        p.classList.remove('active');
-    });
-    pill.classList.add('active');
-    
-    // Filter rows
-    filterRows(document.querySelector('.search-wrap input')?.value || '');
+function applyFilters() {
+  var rows = document.querySelectorAll('#tableBody tr');
+  var visible = 0;
+  rows.forEach(function(row) {
+    var sm = currentStatus === 'all' || row.dataset.status === currentStatus;
+    var qm = currentSearch === '' || (row.dataset.title && row.dataset.title.includes(currentSearch));
+    row.style.display = (sm && qm) ? '' : 'none';
+    if (sm && qm) visible++;
+  });
+  document.getElementById('articleCount').textContent = visible + ' article' + (visible > 1 ? 's' : '');
+  document.getElementById('emptyState').style.display = visible === 0 ? 'block' : 'none';
 }
 
-/**
- * Filter rows based on search and status
- */
-function filterRows(searchValue) {
-    const rows = document.querySelectorAll('#tableBody tr');
-    const activeStatus = document.querySelector('.filter-pill.active')?.textContent.trim().toLowerCase();
-    let visibleCount = 0;
-    
-    rows.forEach(row => {
-        const title = row.dataset.title || '';
-        const status = row.dataset.status || '';
-        const statusText = status === 'publie' ? 'publiés' : 'brouillons';
-        
-        const matchesSearch = !searchValue || title.includes(searchValue.toLowerCase());
-        const matchesStatus = !activeStatus || activeStatus === 'tous' || statusText.includes(activeStatus);
-        
-        if (matchesSearch && matchesStatus) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-    
-    // Update article count
-    const countEl = document.getElementById('articleCount');
-    if (countEl) {
-        countEl.textContent = `${visibleCount} article${visibleCount !== 1 ? 's' : ''}`;
-    }
+// ── Delete modal ──
+var pendingDeleteId = null;
+
+function openDeleteModal(name, id) {
+  pendingDeleteId = id;
+  document.getElementById('modalArticleName').textContent = '« ' + name + ' »';
+  var form = document.getElementById('deleteForm');
+  form.action = '/articles/' + id + '/delete';
+  document.getElementById('deleteModal').classList.add('open');
 }
 
-/**
- * Initialize search
- */
-function initSearch() {
-    const searchInput = document.querySelector('.search-wrap input');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => filterRows(e.target.value));
-    }
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('open');
 }
 
-/**
- * Initialize table filters
- */
-function initTableFilters() {
-    // Already initialized in setStatusFilter
+function closeModalBackdrop(e) {
+  if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
 }
 
-/**
- * Initialize delete modal
- */
-function initDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    if (!modal) return;
-    
-    window.openDeleteModal = function(title, id) {
-        const articleName = document.getElementById('modalArticleName');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        if (articleName) {
-            articleName.textContent = `"${title}"`;
-        }
-        
-        if (deleteForm) {
-            deleteForm.action = `/articles/${id}`;
-        }
-        
-        modal.classList.add('show');
-    };
-    
-    window.closeDeleteModal = function() {
-        modal.classList.remove('show');
-    };
-    
-    window.closeModalBackdrop = function(event) {
-        if (event.target === modal) {
-            closeDeleteModal();
-        }
-    };
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDeleteModal();
+});
+
+// ── Tweaks panel ──
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === '__activate_edit_mode')   document.getElementById('tweakPanel').style.display = 'block';
+  if (e.data && e.data.type === '__deactivate_edit_mode') document.getElementById('tweakPanel').style.display = 'none';
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+function applyTweak(k, v) {
+  if (k === 'accentColor') {
+    document.documentElement.style.setProperty('--accent', v);
+    document.querySelector('.logo-box').style.background = 'linear-gradient(135deg,' + v + ',#EC4899)';
+    document.querySelectorAll('.btn-primary').forEach(function(b) { b.style.background = 'linear-gradient(135deg,' + v + ',#EC4899)'; });
+    document.querySelectorAll('.filter-pill.active').forEach(function(p) { p.style.background = 'linear-gradient(135deg,' + v + ',#EC4899)'; });
+  }
+  if (k === 'showTimeline') {
+    var bg = document.getElementById('bottomGrid');
+    bg.style.gridTemplateColumns = v ? '1fr 340px' : '1fr';
+    bg.querySelector(':first-child').style.display = v ? '' : 'none';
+  }
+  if (k === 'showViews') {
+    document.querySelectorAll('.col-views').forEach(function(el) { el.style.display = v ? '' : 'none'; });
+  }
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
 }
+
+// ── Stat counter animation ──
+document.querySelectorAll('.stat-value').forEach(function(el) {
+  var target = parseFloat(el.textContent.replace(/[^0-9.]/g, ''));
+  if (isNaN(target) || target === 0) return;
+  var duration = 1200;
+  var startTime = null;
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    var ease = 1 - Math.pow(1 - progress, 3);
+    var current = Math.round(ease * target);
+    el.textContent = el.textContent.replace(/\d[\d,]*/, current.toLocaleString());
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  setTimeout(function() { requestAnimationFrame(step); }, 300);
+});
